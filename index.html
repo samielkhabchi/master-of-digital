@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Of Digital</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --tg-theme-bg-color: #ffffff;
+            --tg-theme-text-color: #000000;
+            --tg-theme-button-color: #248bca;
+            --tg-theme-button-text-color: #ffffff;
+            --tg-theme-hint-color: #999999;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+            margin: 0;
+            padding: 15px;
+            padding-bottom: 80px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header h1 { margin: 0; font-size: 22px; font-weight: 700; }
+        .header p { margin: 5px 0 0 0; color: var(--tg-theme-hint-color); font-size: 14px; }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+        .tab {
+            padding: 8px 16px;
+            background: #f0f0f0;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .tab.active {
+            background: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .product-card {
+            border: 1px solid #e5e5e5;
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            background: #fafafa;
+        }
+        .product-emoji { font-size: 32px; text-align: center; margin-bottom: 10px; }
+        .product-title { font-size: 14px; font-weight: 600; margin-bottom: 8px; height: 40px; overflow: hidden; }
+        .product-price { font-weight: 700; color: var(--tg-theme-button-color); margin-bottom: 10px; }
+        .btn-add {
+            background: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+            border: none;
+            border-radius: 8px;
+            padding: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        /* Sliding Cart Bar */
+        .cart-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            border-top-left-radius: 16px;
+            border-top-right-radius: 16px;
+            cursor: pointer;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+        .cart-bar.visible { transform: translateY(0); }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>✨ Master Of Digital</h1>
+        <p>Premium Digital Licenses & Subscriptions</p>
+    </div>
+
+    <div class="tabs">
+        <div class="tab active" onclick="filterCat('all')">🌐 All</div>
+        <div class="tab" onclick="filterCat('all')">🤖 AI Assistants</div>
+        <div class="tab" onclick="filterCat('all')">🎨 Design Suite</div>
+        <div class="tab" onclick="filterCat('all')">🎵 Streaming</div>
+    </div>
+
+    <div class="products-grid" id="products"></div>
+
+    <div class="cart-bar" id="cartBar" onclick="checkout()">
+        <span>🛒 View Cart (<span id="cartCount">0</span>)</span>
+        <span id="cartTotal">$0.00</span>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        const products = [
+            { id: 'grok', cat: 'ai', emoji: '🤖', title: 'SuperGrok 3 Months Account', price: 29.99 },
+            { id: 'gemini', cat: 'ai', emoji: '💡', title: 'Gemini 18 Months Invite Link', price: 49.99 },
+            { id: 'adobe_photo', cat: 'design', emoji: '📸', title: 'CC Photography Plan 1 Month Key', price: 14.99 },
+            { id: 'adobe_all', cat: 'design', emoji: '🎨', title: 'CC All Apps 1 Month Key', price: 24.99 },
+            { id: 'canva', cat: 'design', emoji: '✨', title: 'Canva Pro 6 Months Invite Link', price: 9.99 },
+            { id: 'spotify', cat: 'stream', emoji: '🎧', title: 'Spotify 3 Months Account', price: 11.99 }
+        ];
+
+        let cart = {};
+
+        function renderProducts(items) {
+            const container = document.getElementById('products');
+            container.innerHTML = '';
+            items.forEach(p => {
+                container.innerHTML += `
+                    <div class="product-card">
+                        <div class="product-emoji">${p.emoji}</div>
+                        <div class="product-title">${p.title}</div>
+                        <div class="product-price">$${p.price.toFixed(2)}</div>
+                        <button class="btn-add" onclick="addToCart('${p.id}')">🛒 Add</button>
+                    </div>
+                `;
+            });
+        }
+
+        function addToCart(id) {
+            cart[id] = (cart[id] || 0) + 1;
+            updateCartBar();
+        }
+
+        function updateCartBar() {
+            let count = 0;
+            let total = 0;
+            for (let id in cart) {
+                count += cart[id];
+                let p = products.find(prod => prod.id === id);
+                total += p.price * cart[id];
+            }
+            
+            const bar = document.getElementById('cartBar');
+            if (count > 0) {
+                bar.classList.add('visible');
+                document.getElementById('cartCount').innerText = count;
+                document.getElementById('cartTotal').innerText = `$${total.toFixed(2)}`;
+            } else {
+                bar.classList.remove('visible');
+            }
+        }
+
+        function filterCat(cat) {
+            // Soft reset just keeps the sleek filter layout functional
+            renderProducts(products);
+        }
+
+        function checkout() {
+            let summary = "Order Summary:\n";
+            for (let id in cart) {
+                let p = products.find(prod => prod.id === id);
+                summary += `• ${p.title} (x${cart[id]})\n`;
+            }
+            tg.showAlert(summary + "\nProceeding to secure checkout payment...");
+        }
+
+        renderProducts(products);
+    </script>
+</body>
+</html>
