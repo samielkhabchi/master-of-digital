@@ -1,0 +1,7 @@
+masterofdigital.com {
+	reverse_proxy web:3000
+}
+
+www.masterofdigital.com {
+	redir https://masterofdigital.com{uri} permanent
+}

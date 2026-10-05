@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+/* Master Of Digital — ink & ultraviolet, with an acid-lime accent for deals. */
+@theme {
+  --color-ink: #12121c;
+  --color-ink-2: #1c1c2b;
+  --color-ink-3: #2a2a3d;
+  --color-paper: #f5f4fa;
+  --color-surface: #ffffff;
+  --color-line: #e6e4ef;
+  --color-muted: #6b6a80;
+  --color-violet: #6a4cff;
+  --color-violet-600: #5536f0;
+  --color-violet-50: #f0edff;
+  --color-lime: #c8f53c;
+  --color-danger: #e5484d;
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --radius-card: 1.125rem;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.prose-digi {
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+.prose-digi p,
+.prose-digi ul,
+.prose-digi ol {
+  margin: 0 0 0.85rem;
+}
+.prose-digi ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+}
+.prose-digi ol {
+  list-style: decimal;
+  padding-left: 1.25rem;
+}
+.prose-digi a {
+  color: var(--color-violet-600);
+  text-decoration: underline;
+}
+.prose-digi img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.75rem;
+}
